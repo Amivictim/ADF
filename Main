@@ -80,8 +80,6 @@ end)
 -----------------------------
 -- Kill Aura Section
 -----------------------------
-local CombatSection = Window:NewSection("Kill Aura")
-
 local killauraEnabled = false
 
 CombatSection:CreateToggle("Killaura", function(state)
@@ -114,7 +112,6 @@ CombatSection:CreateToggle("Killaura", function(state)
         end)
     end
 end)
-
 -----------------------------
 -- Farming Locations Section
 -----------------------------
