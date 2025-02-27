@@ -1,377 +1,234 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
-local Window = Library:NewWindow("ADF By Victim😭🙏")
+-- Load Services
 local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+-- GUI Setup
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/unknownpro/crossair/master/UniversalGUI.lua"))() -- Link to UI Library
+local Window = library:CreateWindow("Roblox Script")
 
 -----------------------------
--- Kill Aura & Tween Section
+-- Combat Section
 -----------------------------
-local CombatSection = Window:NewSection("Kill Aura")
+local CombatSection = Window:NewSection("Combat")
 
 local killauraEnabled = false
-local tweenEnabled = false
-local tweenDirection = "Above"
-local tweenDistance = 5
-local activeTweenLoops = {}  -- Tween'lenen NPC'leri takip etmek için
-local originalPositions = {} -- Sideways için orijinal pozisyonları saklama
+local currentTarget = nil
 
+-- Get closest Mob function
+local function getClosestMob()
+    local closestMob = nil
+    local closestDistance = math.huge
+    for _, mob in pairs(workspace.Enemies:GetChildren()) do
+        if mob:FindFirstChild("HumanoidRootPart") then
+            local distance = (Players.LocalPlayer.Character.HumanoidRootPart.Position - mob.HumanoidRootPart.Position).Magnitude
+            if distance < closestDistance then
+                closestDistance = distance
+                closestMob = mob
+            end
+        end
+    end
+    return closestMob
+end
+
+-- Kill Aura Toggle
 CombatSection:CreateToggle("Killaura", function(state)
     killauraEnabled = state
     if killauraEnabled then
         spawn(function()
             while killauraEnabled do
-                for _, object in pairs(workspace:GetDescendants()) do
-                    if object:IsA("Model") and object:FindFirstChild("Humanoid") then
-                        -- Kill Aura Saldırısı
-                        local args = {
-                            [1] = {
-                                ["phsic"] = {
-                                    ["Power"] = 21.213,
-                                    ["Time"] = 0.15,
-                                    ["Dir"] = Vector3.new(-0.467, 0.707, 0.530)
-                                },
-                                ["damage"] = 30,
-                                ["castPercent"] = 0,
-                                ["hitID"] = 1,
-                                ["isSetNetworkOwnerEnemy"] = true,
-                                ["skillID"] = 15020001
-                            },
-                            [2] = object.Name
-                        }
-                        game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("HitEvent"):FireServer(unpack(args))
-
-                        -- Tween Aktifse
-                        if tweenEnabled then
-                            local part = object:FindFirstChild("HumanoidRootPart") or object.PrimaryPart
-                            if part and not activeTweenLoops[object] then
-                                activeTweenLoops[object] = true
-                                spawn(function()
-                                    while tweenEnabled and object.Parent do
-                                        local currentPos = part.Position
-                                        local offset = Vector3.new(0, 0, 0)
-
-                                        if tweenDirection == "Above" then
-                                            offset = Vector3.new(0, tweenDistance, 0)
-                                        elseif tweenDirection == "Below" then
-                                            offset = Vector3.new(0, -tweenDistance, 0)
-                                        elseif tweenDirection == "Front" then
-                                            offset = Vector3.new(0, 0, -tweenDistance)
-                                        elseif tweenDirection == "Behind" then
-                                            offset = Vector3.new(0, 0, tweenDistance)
-                                        elseif tweenDirection == "Sideways" then
-                                            if not originalPositions[object] then
-                                                originalPositions[object] = currentPos
-                                            end
-                                            local basePos = originalPositions[object]
-                                            local rightPos = basePos + Vector3.new(tweenDistance, 0, 0)
-                                            local leftPos = basePos + Vector3.new(-tweenDistance, 0, 0)
-
-                                            local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-                                            local tween = TweenService:Create(part, tweenInfo, {Position = rightPos})
-                                            tween:Play()
-                                            tween.Completed:Wait()
-                                            if not tweenEnabled then break end
-
-                                            tween = TweenService:Create(part, tweenInfo, {Position = leftPos})
-                                            tween:Play()
-                                            tween.Completed:Wait()
-                                            if not tweenEnabled then break end
-
-                                            continue -- Sideways devam ederken aşağıdaki kodu atla
-                                        end
-
-                                        local targetPos = currentPos + offset
-                                        local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-                                        local tween = TweenService:Create(part, tweenInfo, {Position = targetPos})
-                                        tween:Play()
-                                        tween.Completed:Wait()
-                                    end
-                                    activeTweenLoops[object] = nil
-                                end)
-                            end
-                        end
-                    end
-                end
-                wait(0.1)
-            end
-        end)
-    end
-end)
-
-  
------------------------------
-  
--- Farming Locations Section
-  
------------------------------
-  
-local FarmingSection = Window:NewSection("Farming Locations")
-  
-local chosenLocation, chosenDifficulty = nil, nil
-  
-
-  
-local locationMapping = {
-  
-    ["Final Valley"] = "1_1",
-  
-    ["Labs"] = "1_2",
-  
-    ["Village"] = "1_3"
-  
-}
-  
-local locationOptions = {"Final Valley", "Labs", "Village"}
-  
-FarmingSection:CreateDropdown("Select Location", locationOptions, 1, function(selected)
-  
-    chosenLocation = locationMapping[selected]
-  
-end)
-  
-
-  
-local difficultyMapping = {
-  
-    ["Easy"] = 1,
-  
-    ["Normal"] = 2,
-  
-    ["Hard"] = 3
-  
-}
-  
-local difficultyOptions = {"Easy", "Normal", "Hard"}
-  
-FarmingSection:CreateDropdown("Select Difficulty", difficultyOptions, 1, function(selected)
-  
-    chosenDifficulty = difficultyMapping[selected]
-  
-end)
-  
-
-  
-local farmingEnabled = false
-  
-FarmingSection:CreateToggle("Start Farming", function(state)
-  
-    farmingEnabled = state
-  
-    if farmingEnabled then
-  
-        spawn(function()
-  
-            while farmingEnabled do
-  
-                if chosenLocation and chosenDifficulty then
-  
-                    wait(1)
-  
-                    local args1 = {
-  
-                        [1] = "\229\138\160\229\133\165\231\187\132\233\152\159\230\136\191\233\151\180",
-  
-                        [2] = chosenLocation
-  
-                    }
-  
-                    game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args1))
-  
-                    wait(0.1)
-  
-                    local args2 = {
-  
-                        [1] = "\230\138\149\231\165\168\233\154\190\229\186\166",
-  
-                        [2] = chosenDifficulty
-  
-                    }
-  
-                    game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args2))
-  
-                end
-  
-                wait(0.1)
-  
-            end
-  
-        end)
-  
-    end
-  
-end)
-  
-
-  
------------------------------
-  
--- Dungeons Section
-  
------------------------------
-  
-local DungeonsSection = Window:NewSection("Dungeons")
-  
-local chosenDungeon, chosenDungeonDifficulty = nil, nil
-  
-
-  
-local dungeonMapping = {
-  
-    ["Snow Dungeon"] = "\231\139\172\232\135\170\229\141\135\231\186\167\229\137\175\230\156\172",
-  
-    ["Demon City"] = "\231\139\172\232\135\170\229\141\135\231\186\167\229\137\175\230\156\172A",
-  
-    ["Throne Of Orcs"] = "\231\139\172\232\135\170\229\141\135\231\186\167\229\137\175\230\156\172B",
-  
-    ["Remains Of Frost"] = "\231\139\172\232\135\170\229\141\135\231\186\167\229\137\175\230\156\172C"
-  
-}
-  
-local dungeonOptions = {"Snow Dungeon", "Demon City", "Throne Of Orcs", "Remains Of Frost"}
-  
-DungeonsSection:CreateDropdown("Select Dungeon", dungeonOptions, 1, function(selected)
-  
-    chosenDungeon = dungeonMapping[selected]
-  
-end)
-  
-
-  
-local dungeonDifficultyMapping = {
-  
-    ["Wave:1-Easy"] = 1,
-  
-    ["Wave:51-Normal"] = 2,
-  
-    ["Wave:101-Hard"] = 3
-  
-}
-  
-local dungeonDifficultyOptions = {"Wave:1-Easy", "Wave:51-Normal", "Wave:101-Hard"}
-  
-DungeonsSection:CreateDropdown("Select Dungeon Difficulty", dungeonDifficultyOptions, 1, function(selected)
-  
-    chosenDungeonDifficulty = dungeonDifficultyMapping[selected]
-  
-end)
-  
-
-  
-local dungeonsEnabled = false
-  
-DungeonsSection:CreateToggle("Start Dungeons", function(state)
-  
-    dungeonsEnabled = state
-  
-    if dungeonsEnabled then
-  
-        spawn(function()
-  
-            while dungeonsEnabled do
-  
-                if chosenDungeon and chosenDungeonDifficulty then
-  
-                    wait(1)
-  
-                    local args1 = {
-  
-                        [1] = "\229\138\160\229\133\165\231\187\132\233\152\159\230\136\191\233\151\180",
-  
-                        [2] = chosenDungeon
-  
-                    }
-  
-                    game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args1))
-  
-                    wait(0.1)
-  
-                    local args2 = {
-  
-                        [1] = "\230\138\149\231\165\168\233\154\190\229\186\166",
-  
-                        [2] = chosenDungeonDifficulty
-  
-                    }
-  
-                    game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args2))
-  
-                end
-  
-                wait(0.1)
-  
-            end
-  
-        end)
-  
-    end
-  
-end)
-  
-
-  
------------------------------
-  
--- Stats Section
-  
------------------------------
-  
-local StatsSection = Window:NewSection("Stats")
-  
-local chosenStat = nil
-  
-local statMapping = {
-  
-    ["Health"] = "3",
-  
-    ["Attack"] = "1",
-  
-    ["Defence"] = "2",
-  
-    ["Critical"] = "6"
-  
-}
-  
-local statOptions = {"Health", "Attack", "Defence", "Critical"}
-  
-StatsSection:CreateDropdown("Select Stat", statOptions, 1, function(selected)
-  
-    chosenStat = selected
-  
-end)
-  
-
-  
-local statsToggleEnabled = false
-  
-StatsSection:CreateToggle("Start Stats", function(state)
-  
-    statsToggleEnabled = state
-  
-    if statsToggleEnabled then
-  
-        spawn(function()
-  
-            while statsToggleEnabled do
-  
-                if chosenStat then
-  
+                currentTarget = getClosestMob()
+                if currentTarget then
                     local args = {
-  
-                        [1] = "\229\177\158\230\128\167\231\130\185\229\138\160\231\130\185",
-  
-                        [2] = {["attr"] = statMapping[chosenStat], ["addonce"] = 4}
-  
+                        [1] = {
+                            ["phsic"] = {
+                                ["Power"] = 21.21320343017578,
+                                ["Time"] = 0.15,
+                                ["Dir"] = Vector3.new(-0.467914, 0.707106, 0.530147)
+                            },
+                            ["damage"] = 30,
+                            ["castPercent"] = 0,
+                            ["hitID"] = 1,
+                            ["isSetNetworkOwnerEnemy"] = true,
+                            ["skillID"] = 15020001
+                        },
+                        [2] = currentTarget.Name
                     }
-  
-                    game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args))
-  
+                    ReplicatedStorage:WaitForChild("Msg"):WaitForChild("HitEvent"):FireServer(unpack(args))
                 end
-  
                 wait(0.1)
-  
             end
-  
         end)
-  
     end
-  
+end)
+
+-----------------------------
+-- Sideways Tween Section
+-----------------------------
+local SidewaysTweenSection = Window:NewSection("Sideways Tween")
+
+local sidewaysTweenEnabled = false
+local sidewaysTweenDistance = 10  -- Yatay mesafe ayarı
+local sidewaysCurrentTarget = nil
+
+-- Sideways Tween Toggle
+SidewaysTweenSection:CreateToggle("Start Sideways Tween", function(state)
+    sidewaysTweenEnabled = state
+    if sidewaysTweenEnabled then
+        spawn(function()
+            while sidewaysTweenEnabled do
+                if sidewaysCurrentTarget and sidewaysCurrentTarget:FindFirstChild("HumanoidRootPart") then
+                    -- Yatay yön için mesafeyi değiştirme
+                    local targetPos = sidewaysCurrentTarget.HumanoidRootPart.Position + Vector3.new(sidewaysTweenDistance, 0, 0)
+                    local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+                    local tween = TweenService:Create(Players.LocalPlayer.Character.HumanoidRootPart, tweenInfo, {Position = targetPos})
+                    tween:Play()
+                end
+                wait(0.1)
+            end
+        end)
+    end
+end)
+
+-----------------------------
+-- Farming Locations Section
+-----------------------------
+local FarmingSection = Window:NewSection("Farming Locations")
+local chosenLocation, chosenDifficulty = nil, nil
+
+local locationMapping = {
+    ["Final Valley"] = "1_1",
+    ["Labs"] = "1_2",
+    ["Village"] = "1_3"
+}
+local locationOptions = {"Final Valley", "Labs", "Village"}
+FarmingSection:CreateDropdown("Select Location", locationOptions, 1, function(selected)
+    chosenLocation = locationMapping[selected]
+end)
+
+local difficultyMapping = {
+    ["Easy"] = 1,
+    ["Normal"] = 2,
+    ["Hard"] = 3
+}
+local difficultyOptions = {"Easy", "Normal", "Hard"}
+FarmingSection:CreateDropdown("Select Difficulty", difficultyOptions, 1, function(selected)
+    chosenDifficulty = difficultyMapping[selected]
+end)
+
+local farmingEnabled = false
+FarmingSection:CreateToggle("Start Farming", function(state)
+    farmingEnabled = state
+    if farmingEnabled then
+        spawn(function()
+            while farmingEnabled do
+                if chosenLocation and chosenDifficulty then
+                    wait(1)
+                    local args1 = {
+                        [1] = "\229\138\160\229\133\165\231\187\132\233\152\159\230\136\191\233\151\180",
+                        [2] = chosenLocation
+                    }
+                    ReplicatedStorage:WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args1))
+                    wait(0.1)
+                    local args2 = {
+                        [1] = "\230\138\149\231\165\168\233\154\190\229\186\166",
+                        [2] = chosenDifficulty
+                    }
+                    ReplicatedStorage:WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args2))
+                end
+                wait(0.1)
+            end
+        end)
+    end
+end)
+
+-----------------------------
+-- Dungeons Section
+-----------------------------
+local DungeonsSection = Window:NewSection("Dungeons")
+local chosenDungeon, chosenDungeonDifficulty = nil, nil
+
+local dungeonMapping = {
+    ["Snow Dungeon"] = "\231\139\172\232\135\170\229\141\135\231\186\167\229\137\175\230\156\172",
+    ["Demon City"] = "\231\139\172\232\135\170\229\141\135\231\186\167\229\137\175\230\156\172A",
+    ["Throne Of Orcs"] = "\231\139\172\232\135\170\229\141\135\231\186\167\229\137\175\230\156\172B",
+    ["Remains Of Frost"] = "\231\139\172\232\135\170\229\141\135\231\186\167\229\137\175\230\156\172C"
+}
+local dungeonOptions = {"Snow Dungeon", "Demon City", "Throne Of Orcs", "Remains Of Frost"}
+DungeonsSection:CreateDropdown("Select Dungeon", dungeonOptions, 1, function(selected)
+    chosenDungeon = dungeonMapping[selected]
+end)
+
+local dungeonDifficultyMapping = {
+    ["Wave:1-Easy"] = 1,
+    ["Wave:51-Normal"] = 2,
+    ["Wave:101-Hard"] = 3
+}
+local dungeonDifficultyOptions = {"Wave:1-Easy", "Wave:51-Normal", "Wave:101-Hard"}
+DungeonsSection:CreateDropdown("Select Dungeon Difficulty", dungeonDifficultyOptions, 1, function(selected)
+    chosenDungeonDifficulty = dungeonDifficultyMapping[selected]
+end)
+
+local dungeonsEnabled = false
+DungeonsSection:CreateToggle("Start Dungeons", function(state)
+    dungeonsEnabled = state
+    if dungeonsEnabled then
+        spawn(function()
+            while dungeonsEnabled do
+                if chosenDungeon and chosenDungeonDifficulty then
+                    wait(1)
+                    local args1 = {
+                        [1] = "\229\138\160\229\133\165\231\187\132\233\152\159\230\136\191\233\151\180",
+                        [2] = chosenDungeon
+                    }
+                    ReplicatedStorage:WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args1))
+                    wait(0.1)
+                    local args2 = {
+                        [1] = "\230\138\149\231\165\168\233\154\190\229\186\166",
+                        [2] = chosenDungeonDifficulty
+                    }
+                    ReplicatedStorage:WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args2))
+                end
+                wait(0.1)
+            end
+        end)
+    end
+end)
+
+-----------------------------
+-- Stats Section
+-----------------------------
+local StatsSection = Window:NewSection("Stats")
+local chosenStat = nil
+local statMapping = {
+    ["Health"] = "3",
+    ["Attack"] = "1",
+    ["Defence"] = "2",
+    ["Critical"] = "6"
+}
+local statOptions = {"Health", "Attack", "Defence", "Critical"}
+StatsSection:CreateDropdown("Select Stat", statOptions, 1, function(selected)
+    chosenStat = statMapping[selected]
+end)
+
+local statsEnabled = false
+StatsSection:CreateToggle("Start Stats Farming", function(state)
+    statsEnabled = state
+    if statsEnabled then
+        spawn(function()
+            while statsEnabled do
+                if chosenStat then
+                    wait(1)
+                    local args1 = {
+                        [1] = "\229\138\160\229\133\165\231\187\132\233\152\159\230\136\191\233\151\180",
+                        [2] = chosenStat
+                    }
+                    ReplicatedStorage:WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args1))
+                end
+                wait(0.1)
+            end
+        end)
+    end
 end)
