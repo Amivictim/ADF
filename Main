@@ -1,18 +1,15 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
 local Window = Library:NewWindow("ADF By Victim😭🙏")
-local TweenService = game:GetService("TweenService")
 
 -----------------------------
--- Kill Aura & Tween Section
+-- Kill Aura
 -----------------------------
-local CombatSection = Window:NewSection("Kill Aura")
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
+local Tab = Window:NewSection("Combat")
 
 local killauraEnabled = false
-local tweenEnabled = false
-local tweenDirection = "Above"
-local tweenDistance = 5
 
-CombatSection:CreateToggle("Killaura", function(state)
+Tab:CreateToggle("Killaura", function(state)
     killauraEnabled = state
     if killauraEnabled then
         spawn(function()
@@ -34,28 +31,8 @@ CombatSection:CreateToggle("Killaura", function(state)
                             },
                             [2] = object.Name
                         }
+
                         game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("HitEvent"):FireServer(unpack(args))
-                        
-                        if tweenEnabled then
-                            local part = object:FindFirstChild("HumanoidRootPart") or object.PrimaryPart
-                            if part then
-                                local currentPos = part.Position
-                                local offset = Vector3.new(0, 0, 0)
-                                if tweenDirection == "Above" then
-                                    offset = Vector3.new(0, tweenDistance, 0)
-                                elseif tweenDirection == "Below" then
-                                    offset = Vector3.new(0, -tweenDistance, 0)
-                                elseif tweenDirection == "Front" then
-                                    offset = Vector3.new(0, 0, -tweenDistance)
-                                elseif tweenDirection == "Behind" then
-                                    offset = Vector3.new(0, 0, tweenDistance)
-                                end
-                                local targetPos = currentPos + offset
-                                local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-                                local tween = TweenService:Create(part, tweenInfo, {Position = targetPos})
-                                tween:Play()
-                            end
-                        end
                     end
                 end
                 wait(0.1)
@@ -63,23 +40,57 @@ CombatSection:CreateToggle("Killaura", function(state)
         end)
     end
 end)
-
-CombatSection:CreateDropdown("Select Tween Direction", {"Above", "Behind", "Below", "Front"}, 1, function(selected)
-    tweenDirection = selected
-end)
-
-CombatSection:CreateDropdown("Select Tween Distance", {"5", "10", "15", "20"}, 1, function(selected)
-    tweenDistance = tonumber(selected)
-end)
-
-CombatSection:CreateToggle("Start Tween", function(state)
-    tweenEnabled = state
-end)
-
 -----------------------------
--- Farming Locations Section
+-- Sideways Tween Section (Mob Oscillation)
 -----------------------------
-local FarmingSection = Window:NewSection("Farming Locations")
+local sideTweenEnabled = false
+local sideTweenOffset = 5       -- Sağ-sol offset (birim cinsinden)
+local sideTweenTime = 2         -- Tween süresi (saniye cinsinden)
+local originalPositions = {}    -- Her mobun orijinal pozisyonunu saklamak için
+local activeTweenLoops = {}     -- Halihazırda tween döngüsü başlatılmış mobları saklar
+
+CombatSection:CreateToggle("Tween Mobs", function(state)
+    sideTweenEnabled = state
+    if sideTweenEnabled then
+        spawn(function()
+            while sideTweenEnabled do
+                for _, object in pairs(workspace:GetDescendants()) do
+                    if object:IsA("Model") and object:FindFirstChild("Humanoid") and object ~= localPlayer.Character then
+                        local part = object:FindFirstChild("HumanoidRootPart") or object.PrimaryPart
+                        if part and not activeTweenLoops[object] then
+                            if not originalPositions[object] then
+                                originalPositions[object] = part.Position
+                            end
+                            activeTweenLoops[object] = true
+                            spawn(function()
+                                while sideTweenEnabled and object.Parent do
+                                    local basePos = originalPositions[object] or part.Position
+                                    local rightPos = basePos + Vector3.new(sideTweenOffset, 0, 0)
+                                    local tweenInfo = TweenInfo.new(sideTweenTime, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+                                    local tween = TweenService:Create(part, tweenInfo, {Position = rightPos})
+                                    tween:Play()
+                                    tween.Completed:Wait()
+                                    if not sideTweenEnabled or not object.Parent then break end
+                                    local leftPos = basePos + Vector3.new(-sideTweenOffset, 0, 0)
+                                    tween = TweenService:Create(part, tweenInfo, {Position = leftPos})
+                                    tween:Play()
+                                    tween.Completed:Wait()
+                                end
+                                activeTweenLoops[object] = nil
+                            end)
+                        end
+                    end
+                end
+                wait(5) 
+            end
+            activeTweenLoops = {} 
+        end)
+    end
+end)
+-----------------------------
+-- Farming Thing
+-----------------------------
+local FarmingSection = Window:NewSection("Farm?")
 local chosenLocation, chosenDifficulty = nil, nil
 
 local locationMapping = {
@@ -103,7 +114,7 @@ FarmingSection:CreateDropdown("Select Difficulty", difficultyOptions, 1, functio
 end)
 
 local farmingEnabled = false
-FarmingSection:CreateToggle("Start Farming", function(state)
+FarmingSection:CreateToggle("Start", function(state)
     farmingEnabled = state
     if farmingEnabled then
         spawn(function()
@@ -127,9 +138,8 @@ FarmingSection:CreateToggle("Start Farming", function(state)
         end)
     end
 end)
-
 -----------------------------
--- Dungeons Section
+-- Dungeons Part
 -----------------------------
 local DungeonsSection = Window:NewSection("Dungeons")
 local chosenDungeon, chosenDungeonDifficulty = nil, nil
@@ -150,13 +160,13 @@ local dungeonDifficultyMapping = {
     ["Wave:51-Normal"] = 2,
     ["Wave:101-Hard"] = 3
 }
-local dungeonDifficultyOptions = {"Wave:1-Easy", "Wave:51-Normal", "Wave:101-Hard"}
+local dungeonDifficultyOptions = {"EWave:1-Easy", "NWave:51-Normal", "Wave:101-Hard"}
 DungeonsSection:CreateDropdown("Select Dungeon Difficulty", dungeonDifficultyOptions, 1, function(selected)
     chosenDungeonDifficulty = dungeonDifficultyMapping[selected]
 end)
 
 local dungeonsEnabled = false
-DungeonsSection:CreateToggle("Start Dungeons", function(state)
+DungeonsSection:CreateToggle("Start", function(state)
     dungeonsEnabled = state
     if dungeonsEnabled then
         spawn(function()
@@ -180,7 +190,6 @@ DungeonsSection:CreateToggle("Start Dungeons", function(state)
         end)
     end
 end)
-
 -----------------------------
 -- Stats Section
 -----------------------------
@@ -198,7 +207,7 @@ StatsSection:CreateDropdown("Select Stat", statOptions, 1, function(selected)
 end)
 
 local statsToggleEnabled = false
-StatsSection:CreateToggle("Start Stats", function(state)
+StatsSection:CreateToggle("Give Stats", function(state)
     statsToggleEnabled = state
     if statsToggleEnabled then
         spawn(function()
