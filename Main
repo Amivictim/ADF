@@ -1,19 +1,15 @@
--- Gerekli Servisleri Tanımla
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- UI Kütüphanesini Yükle
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
 local Window = Library:NewWindow("ADF By Victim😭🙏")
 
------------------------------
--- Kill Aura Bölümü
------------------------------
 local CombatSection = Window:NewSection("Combat")
+local killauraEnabled = false
 
-CombatSection:CreateToggle("Killaura", function(state) -- Hatalı kısım düzeltildi
+CombatSection:CreateToggle("Killaura", function(state)
     killauraEnabled = state
     if killauraEnabled then
         spawn(function()
@@ -35,7 +31,7 @@ CombatSection:CreateToggle("Killaura", function(state) -- Hatalı kısım düzel
                             },
                             [2] = object.Name
                         }
-                        game:GetService("ReplicatedStorage").Msg.HitEvent:FireServer(unpack(args))
+                        ReplicatedStorage.Msg.HitEvent:FireServer(unpack(args))
                     end
                 end
                 wait(0.1)
@@ -44,9 +40,6 @@ CombatSection:CreateToggle("Killaura", function(state) -- Hatalı kısım düzel
     end
 end)
 
------------------------------
--- Tween Mobs (Yan Yana Hareket Ettirme)
------------------------------
 local sideTweenEnabled = false
 local sideTweenOffset = 5
 local sideTweenTime = 2
@@ -92,11 +85,9 @@ CombatSection:CreateToggle("Tween Mobs", function(state)
     end
 end)
 
------------------------------
--- Farming Bölümü
------------------------------
 local FarmingSection = Window:NewSection("Farm?")
-local chosenLocation, chosenDifficulty = nil, nil
+local chosenLocation = "1_1"
+local chosenDifficulty = 1
 
 local locationMapping = {
     ["Final Valley"] = "1_1",
@@ -104,7 +95,6 @@ local locationMapping = {
     ["Village"] = "1_3"
 }
 local locationOptions = {"Final Valley", "Labs", "Village"}
-
 FarmingSection:CreateDropdown("Select Location", locationOptions, 1, function(selected)
     chosenLocation = locationMapping[selected]
 end)
@@ -115,7 +105,6 @@ local difficultyMapping = {
     ["Hard"] = 3
 }
 local difficultyOptions = {"Easy", "Normal", "Hard"}
-
 FarmingSection:CreateDropdown("Select Difficulty", difficultyOptions, 1, function(selected)
     chosenDifficulty = difficultyMapping[selected]
 end)
@@ -126,25 +115,21 @@ FarmingSection:CreateToggle("Start", function(state)
     if farmingEnabled then
         spawn(function()
             while farmingEnabled do
-                if chosenLocation and chosenDifficulty then
-                    wait(1)
-                    local args1 = {"Start Farm", chosenLocation}
-                    ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args1))
-                    wait(0.1)
-                    local args2 = {"Set Difficulty", chosenDifficulty}
-                    ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args2))
-                end
+                wait(1)
+                local args1 = {"Start Farm", chosenLocation}
+                ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args1))
+                wait(0.1)
+                local args2 = {"Set Difficulty", chosenDifficulty}
+                ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args2))
                 wait(0.1)
             end
         end)
     end
 end)
 
------------------------------
--- Dungeons Bölümü
------------------------------
 local DungeonsSection = Window:NewSection("Dungeons")
-local chosenDungeon, chosenDungeonDifficulty = nil, nil
+local chosenDungeon = "DUNGEON_1"
+local chosenDungeonDifficulty = 1
 
 local dungeonMapping = {
     ["Snow Dungeon"] = "DUNGEON_1",
@@ -153,7 +138,6 @@ local dungeonMapping = {
     ["Remains Of Frost"] = "DUNGEON_4"
 }
 local dungeonOptions = {"Snow Dungeon", "Demon City", "Throne Of Orcs", "Remains Of Frost"}
-
 DungeonsSection:CreateDropdown("Select Dungeon", dungeonOptions, 1, function(selected)
     chosenDungeon = dungeonMapping[selected]
 end)
@@ -164,7 +148,6 @@ local dungeonDifficultyMapping = {
     ["Wave:101-Hard"] = 3
 }
 local dungeonDifficultyOptions = {"Wave:1-Easy", "Wave:51-Normal", "Wave:101-Hard"}
-
 DungeonsSection:CreateDropdown("Select Dungeon Difficulty", dungeonDifficultyOptions, 1, function(selected)
     chosenDungeonDifficulty = dungeonDifficultyMapping[selected]
 end)
@@ -175,25 +158,20 @@ DungeonsSection:CreateToggle("Start", function(state)
     if dungeonsEnabled then
         spawn(function()
             while dungeonsEnabled do
-                if chosenDungeon and chosenDungeonDifficulty then
-                    wait(1)
-                    local args1 = {"Start Dungeon", chosenDungeon}
-                    ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args1))
-                    wait(0.1)
-                    local args2 = {"Set Dungeon Difficulty", chosenDungeonDifficulty}
-                    ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args2))
-                end
+                wait(1)
+                local args1 = {"Start Dungeon", chosenDungeon}
+                ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args1))
+                wait(0.1)
+                local args2 = {"Set Dungeon Difficulty", chosenDungeonDifficulty}
+                ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args2))
                 wait(0.1)
             end
         end)
     end
 end)
 
------------------------------
--- Stats Bölümü
------------------------------
 local StatsSection = Window:NewSection("Stats")
-local chosenStat = nil
+local chosenStat = "Health"
 local statMapping = {
     ["Health"] = "3",
     ["Attack"] = "1",
@@ -201,7 +179,6 @@ local statMapping = {
     ["Critical"] = "6"
 }
 local statOptions = {"Health", "Attack", "Defence", "Critical"}
-
 StatsSection:CreateDropdown("Select Stat", statOptions, 1, function(selected)
     chosenStat = selected
 end)
@@ -212,11 +189,9 @@ StatsSection:CreateToggle("Give Stats", function(state)
     if statsToggleEnabled then
         spawn(function()
             while statsToggleEnabled do
-                if chosenStat then
-                    local args = {"Increase Stat", {["attr"] = statMapping[chosenStat], ["addonce"] = 4}}
-                    ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args))
-                end
                 wait(0.1)
+                local args = {"Increase Stat", {["attr"] = statMapping[chosenStat], ["addonce"] = 4}}
+                ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args))
             end
         end)
     end
