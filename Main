@@ -12,9 +12,8 @@ local Window = Library:NewWindow("ADF By Victim😭🙏")
 -- Kill Aura Bölümü
 -----------------------------
 local CombatSection = Window:NewSection("Combat")
-local killauraEnabled = false
 
-CombatSection:CreateToggle("Killaura", function(state)
+CombatSection:CreateToggle("Killaura", function(state) -- Hatalı kısım düzeltildi
     killauraEnabled = state
     if killauraEnabled then
         spawn(function()
@@ -36,7 +35,7 @@ CombatSection:CreateToggle("Killaura", function(state)
                             },
                             [2] = object.Name
                         }
-                        ReplicatedStorage.Msg.HitEvent:FireServer(unpack(args))
+                        game:GetService("ReplicatedStorage").Msg.HitEvent:FireServer(unpack(args))
                     end
                 end
                 wait(0.1)
