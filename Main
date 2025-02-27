@@ -40,52 +40,7 @@ CombatSection:CreateToggle("Killaura", function(state)
     end
 end)
 
-local sideTweenEnabled = false
-local sideTweenOffset = 5
-local sideTweenTime = 2
-local originalPositions = {}
-local activeTweenLoops = {}
-
-CombatSection:CreateToggle("Tween Mobs", function(state)
-    sideTweenEnabled = state
-    if sideTweenEnabled then
-        spawn(function()
-            while sideTweenEnabled do
-                for _, object in pairs(workspace:GetDescendants()) do
-                    if object:IsA("Model") and object:FindFirstChild("Humanoid") and object ~= localPlayer.Character then
-                        local part = object:FindFirstChild("HumanoidRootPart") or object.PrimaryPart
-                        if part and not activeTweenLoops[object] then
-                            if not originalPositions[object] then
-                                originalPositions[object] = part.Position
-                            end
-                            activeTweenLoops[object] = true
-                            spawn(function()
-                                while sideTweenEnabled and object.Parent do
-                                    local basePos = originalPositions[object] or part.Position
-                                    local rightPos = basePos + Vector3.new(sideTweenOffset, 0, 0)
-                                    local tweenInfo = TweenInfo.new(sideTweenTime, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-                                    local tween = TweenService:Create(part, tweenInfo, {Position = rightPos})
-                                    tween:Play()
-                                    tween.Completed:Wait()
-                                    if not sideTweenEnabled or not object.Parent then break end
-                                    local leftPos = basePos + Vector3.new(-sideTweenOffset, 0, 0)
-                                    tween = TweenService:Create(part, tweenInfo, {Position = leftPos})
-                                    tween:Play()
-                                    tween.Completed:Wait()
-                                end
-                                activeTweenLoops[object] = nil
-                            end)
-                        end
-                    end
-                end
-                wait(5)
-            end
-            activeTweenLoops = {}
-        end)
-    end
-end)
-
-local FarmingSection = Window:NewSection("Farm?")
+local FarmingSection = Window:NewSection("Farming")
 local chosenLocation = "1_1"
 local chosenDifficulty = 1
 
@@ -110,7 +65,7 @@ FarmingSection:CreateDropdown("Select Difficulty", difficultyOptions, 1, functio
 end)
 
 local farmingEnabled = false
-FarmingSection:CreateToggle("Start", function(state)
+FarmingSection:CreateToggle("Start Farming", function(state)
     farmingEnabled = state
     if farmingEnabled then
         spawn(function()
@@ -153,7 +108,7 @@ DungeonsSection:CreateDropdown("Select Dungeon Difficulty", dungeonDifficultyOpt
 end)
 
 local dungeonsEnabled = false
-DungeonsSection:CreateToggle("Start", function(state)
+DungeonsSection:CreateToggle("Start Dungeon", function(state)
     dungeonsEnabled = state
     if dungeonsEnabled then
         spawn(function()
@@ -190,7 +145,7 @@ StatsSection:CreateToggle("Give Stats", function(state)
         spawn(function()
             while statsToggleEnabled do
                 wait(0.1)
-                local args = {"Increase Stat", {["attr"] = statMapping[chosenStat], ["addonce"] = 4}}
+                local args = {"Increase Stat", {"attr" = statMapping[chosenStat], "addonce" = 4}}
                 ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args))
             end
         end)
