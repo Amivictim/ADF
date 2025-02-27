@@ -1,13 +1,20 @@
+-- Gerekli Servisleri Tanımla
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- UI Kütüphanesini Yükle
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
 local Window = Library:NewWindow("ADF By Victim😭🙏")
------------------------------
--- Kill Aura
------------------------------
-local Tab = Window:NewSection("Combat")
 
+-----------------------------
+-- Kill Aura Bölümü
+-----------------------------
+local CombatSection = Window:NewSection("Combat")
 local killauraEnabled = false
 
-Tab:CreateToggle("Killaura", function(state)
+CombatSection:CreateToggle("Killaura", function(state)
     killauraEnabled = state
     if killauraEnabled then
         spawn(function()
@@ -19,7 +26,7 @@ Tab:CreateToggle("Killaura", function(state)
                                 ["phsic"] = {
                                     ["Power"] = 21.21320343017578,
                                     ["Time"] = 0.15,
-                                    ["Dir"] = Vector3.new(-0.46791401505470276, 0.7071067690849304, 0.5301476716995239)
+                                    ["Dir"] = Vector3.new(-0.4679, 0.7071, 0.5301)
                                 },
                                 ["damage"] = 30,
                                 ["castPercent"] = 0,
@@ -29,8 +36,7 @@ Tab:CreateToggle("Killaura", function(state)
                             },
                             [2] = object.Name
                         }
-
-                        game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("HitEvent"):FireServer(unpack(args))
+                        ReplicatedStorage.Msg.HitEvent:FireServer(unpack(args))
                     end
                 end
                 wait(0.1)
@@ -38,14 +44,15 @@ Tab:CreateToggle("Killaura", function(state)
         end)
     end
 end)
+
 -----------------------------
--- Sideways Tween Section (Mob Oscillation)
+-- Tween Mobs (Yan Yana Hareket Ettirme)
 -----------------------------
 local sideTweenEnabled = false
-local sideTweenOffset = 5       -- Sağ-sol offset (birim cinsinden)
-local sideTweenTime = 2         -- Tween süresi (saniye cinsinden)
-local originalPositions = {}    -- Her mobun orijinal pozisyonunu saklamak için
-local activeTweenLoops = {}     -- Halihazırda tween döngüsü başlatılmış mobları saklar
+local sideTweenOffset = 5
+local sideTweenTime = 2
+local originalPositions = {}
+local activeTweenLoops = {}
 
 CombatSection:CreateToggle("Tween Mobs", function(state)
     sideTweenEnabled = state
@@ -79,14 +86,15 @@ CombatSection:CreateToggle("Tween Mobs", function(state)
                         end
                     end
                 end
-                wait(5) 
+                wait(5)
             end
-            activeTweenLoops = {} 
+            activeTweenLoops = {}
         end)
     end
 end)
+
 -----------------------------
--- Farming Thing
+-- Farming Bölümü
 -----------------------------
 local FarmingSection = Window:NewSection("Farm?")
 local chosenLocation, chosenDifficulty = nil, nil
@@ -97,6 +105,7 @@ local locationMapping = {
     ["Village"] = "1_3"
 }
 local locationOptions = {"Final Valley", "Labs", "Village"}
+
 FarmingSection:CreateDropdown("Select Location", locationOptions, 1, function(selected)
     chosenLocation = locationMapping[selected]
 end)
@@ -107,6 +116,7 @@ local difficultyMapping = {
     ["Hard"] = 3
 }
 local difficultyOptions = {"Easy", "Normal", "Hard"}
+
 FarmingSection:CreateDropdown("Select Difficulty", difficultyOptions, 1, function(selected)
     chosenDifficulty = difficultyMapping[selected]
 end)
@@ -119,36 +129,32 @@ FarmingSection:CreateToggle("Start", function(state)
             while farmingEnabled do
                 if chosenLocation and chosenDifficulty then
                     wait(1)
-                    local args1 = {
-                        [1] = "\229\138\160\229\133\165\231\187\132\233\152\159\230\136\191\233\151\180",
-                        [2] = chosenLocation
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args1))
+                    local args1 = {"Start Farm", chosenLocation}
+                    ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args1))
                     wait(0.1)
-                    local args2 = {
-                        [1] = "\230\138\149\231\165\168\233\154\190\229\186\166",
-                        [2] = chosenDifficulty
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args2))
+                    local args2 = {"Set Difficulty", chosenDifficulty}
+                    ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args2))
                 end
                 wait(0.1)
             end
         end)
     end
 end)
+
 -----------------------------
--- Dungeons Part
+-- Dungeons Bölümü
 -----------------------------
 local DungeonsSection = Window:NewSection("Dungeons")
 local chosenDungeon, chosenDungeonDifficulty = nil, nil
 
 local dungeonMapping = {
-    ["Snow Dungeon"] = "\231\139\172\232\135\170\229\141\135\231\186\167\229\137\175\230\156\172",
-    ["Demon City"] = "\231\139\172\232\135\170\229\141\135\231\186\167\229\137\175\230\156\172A",
-    ["Throne Of Orcs"] = "\231\139\172\232\135\170\229\141\135\231\186\167\229\137\175\230\156\172B",
-    ["Remains Of Frost"] = "\231\139\172\232\135\170\229\141\135\231\186\167\229\137\175\230\156\172C"
+    ["Snow Dungeon"] = "DUNGEON_1",
+    ["Demon City"] = "DUNGEON_2",
+    ["Throne Of Orcs"] = "DUNGEON_3",
+    ["Remains Of Frost"] = "DUNGEON_4"
 }
 local dungeonOptions = {"Snow Dungeon", "Demon City", "Throne Of Orcs", "Remains Of Frost"}
+
 DungeonsSection:CreateDropdown("Select Dungeon", dungeonOptions, 1, function(selected)
     chosenDungeon = dungeonMapping[selected]
 end)
@@ -158,7 +164,8 @@ local dungeonDifficultyMapping = {
     ["Wave:51-Normal"] = 2,
     ["Wave:101-Hard"] = 3
 }
-local dungeonDifficultyOptions = {"EWave:1-Easy", "NWave:51-Normal", "Wave:101-Hard"}
+local dungeonDifficultyOptions = {"Wave:1-Easy", "Wave:51-Normal", "Wave:101-Hard"}
+
 DungeonsSection:CreateDropdown("Select Dungeon Difficulty", dungeonDifficultyOptions, 1, function(selected)
     chosenDungeonDifficulty = dungeonDifficultyMapping[selected]
 end)
@@ -171,25 +178,20 @@ DungeonsSection:CreateToggle("Start", function(state)
             while dungeonsEnabled do
                 if chosenDungeon and chosenDungeonDifficulty then
                     wait(1)
-                    local args1 = {
-                        [1] = "\229\138\160\229\133\165\231\187\132\233\152\159\230\136\191\233\151\180",
-                        [2] = chosenDungeon
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args1))
+                    local args1 = {"Start Dungeon", chosenDungeon}
+                    ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args1))
                     wait(0.1)
-                    local args2 = {
-                        [1] = "\230\138\149\231\165\168\233\154\190\229\186\166",
-                        [2] = chosenDungeonDifficulty
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args2))
+                    local args2 = {"Set Dungeon Difficulty", chosenDungeonDifficulty}
+                    ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args2))
                 end
                 wait(0.1)
             end
         end)
     end
 end)
+
 -----------------------------
--- Stats Section
+-- Stats Bölümü
 -----------------------------
 local StatsSection = Window:NewSection("Stats")
 local chosenStat = nil
@@ -200,6 +202,7 @@ local statMapping = {
     ["Critical"] = "6"
 }
 local statOptions = {"Health", "Attack", "Defence", "Critical"}
+
 StatsSection:CreateDropdown("Select Stat", statOptions, 1, function(selected)
     chosenStat = selected
 end)
@@ -211,11 +214,8 @@ StatsSection:CreateToggle("Give Stats", function(state)
         spawn(function()
             while statsToggleEnabled do
                 if chosenStat then
-                    local args = {
-                        [1] = "\229\177\158\230\128\167\231\130\185\229\138\160\231\130\185",
-                        [2] = {["attr"] = statMapping[chosenStat], ["addonce"] = 4}
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteFunction"):InvokeServer(unpack(args))
+                    local args = {"Increase Stat", {["attr"] = statMapping[chosenStat], ["addonce"] = 4}}
+                    ReplicatedStorage.Msg.RemoteFunction:InvokeServer(unpack(args))
                 end
                 wait(0.1)
             end
