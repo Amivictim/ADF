@@ -150,7 +150,7 @@ local dungeonDifficultyMapping = {
     ["Wave:51-Normal"] = 2,
     ["Wave:101-Hard"] = 3
 }
-local dungeonDifficultyOptions = {"EWave:1-Easy", "NWave:51-Normal", "Wave:101-Hard"}
+local dungeonDifficultyOptions = {"Wave:1-Easy", "Wave:51-Normal", "Wave:101-Hard"}
 DungeonsSection:CreateDropdown("Select Dungeon Difficulty", dungeonDifficultyOptions, 1, function(selected)
     chosenDungeonDifficulty = dungeonDifficultyMapping[selected]
 end)
