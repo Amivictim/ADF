@@ -1,10 +1,8 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
 local Window = Library:NewWindow("ADF By Victim😭🙏")
-
 -----------------------------
 -- Kill Aura
 -----------------------------
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
 local Tab = Window:NewSection("Combat")
 
 local killauraEnabled = false
